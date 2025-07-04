@@ -25,7 +25,7 @@ def prepare_model():
 
     # 1. Memuat dan mempersiapkan data
     try:
-        df = pd.read_csv(r'BIGDATA\data\steam.csv')
+        df = pd.read_csv(r'../BIGDATA\data\steam.csv')
     except FileNotFoundError:
         print("❌ ERROR: File 'data/steam.csv' tidak ditemukan.")
         exit() # Hentikan aplikasi jika file tidak ada
