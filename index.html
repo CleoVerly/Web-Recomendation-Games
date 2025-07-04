@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="dracula"> <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rekomendasi Game Steam</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.11.1/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-base-200">
+
+    <div class="container mx-auto p-4 md:p-8">
+
+        <div class="hero bg-base-100 rounded-box mb-8 shadow-xl">
+            <div class="hero-content text-center">
+                <div class="max-w-md">
+                    <h1 class="text-5xl font-bold">GameRecs 🎮</h1>
+                    <p class="py-6">Masukkan nama game favoritmu untuk menemukan petualangan baru yang mungkin kamu sukai. Ditenagai oleh data dari Steam.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-control max-w-lg mx-auto mb-8">
+             <form id="recommendation-form" class="join">
+                <input id="game-input" type="text" placeholder="Contoh: gta atau terraria" class="input input-bordered w-full join-item" required/>
+                <button type="submit" class="btn btn-primary join-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" /></svg>
+                    Cari
+                </button>
+                
+                <button type="button" id="random-game-btn" class="btn btn-accent join-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 11.667 0l3.181-3.183m-4.991-2.691v4.992h-4.992v-4.992z" />
+                    </svg>
+                    Acak
+                </button>
+            </form>
+        </div>
+
+        <div id="results-container" class="mt-8">
+            <div id="loading" class="text-center hidden">
+                <span class="loading loading-lg loading-dots text-primary"></span>
+                <p>Mencari game yang cocok untukmu...</p>
+            </div>
+            
+            <div id="error-message" class="hidden">
+                 <div role="alert" class="alert alert-error">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <span id="error-text"></span>
+                </div>
+            </div>
+            
+            <div id="recommendation-results" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const form = document.getElementById('recommendation-form');
+        const gameInput = document.getElementById('game-input');
+        const resultsContainer = document.getElementById('recommendation-results');
+        const loadingSpinner = document.getElementById('loading');
+        const errorMessage = document.getElementById('error-message');
+        const errorText = document.getElementById('error-text');
+        const randomBtn = document.getElementById('random-game-btn');
+        const submitBtn = document.querySelector('#recommendation-form button[type="submit"]');
+
+        // Event listener untuk form pencarian utama
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault(); // Mencegah form reload halaman
+
+            const gameName = gameInput.value.trim();
+            if (!gameName) return;
+
+            // Tampilkan loading, sembunyikan hasil lama dan error
+            loadingSpinner.classList.remove('hidden');
+            resultsContainer.innerHTML = '';
+            errorMessage.classList.add('hidden');
+
+            try {
+                const response = await fetch('http://127.0.0.1:5000/recommend', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ game_name: gameName }),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Terjadi kesalahan pada server.');
+                }
+
+                const data = await response.json();
+                displayRecommendations(data.recommendations, data.found_game);
+
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                loadingSpinner.classList.add('hidden');
+            }
+        });
+        
+        // Event listener untuk tombol acak
+        randomBtn.addEventListener('click', async () => {
+            // Tampilkan loading, sembunyikan hasil lama dan error
+            loadingSpinner.classList.remove('hidden');
+            resultsContainer.innerHTML = '';
+            errorMessage.classList.add('hidden');
+            gameInput.value = ''; // Kosongkan input field
+
+            try {
+                const response = await fetch('http://127.0.0.1:5000/random');
+                const data = await response.json();
+                
+                // Masukkan nama game acak ke dalam input field
+                gameInput.value = data.game_name;
+                
+                // Secara otomatis klik tombol "Cari" untuk langsung menampilkan rekomendasi
+                submitBtn.click();
+                
+            } catch (error) {
+                showError('Gagal mengambil game acak. Coba lagi.');
+                loadingSpinner.classList.add('hidden');
+            }
+        });
+
+        function displayRecommendations(games, found_game_name) {
+            resultsContainer.innerHTML = ''; // Kosongkan hasil sebelumnya
+            if (!games || games.length === 0) {
+                 showError('Tidak ada rekomendasi yang ditemukan.');
+                 return;
+            }
+
+            // Tambahkan judul untuk menunjukkan game apa yang ditemukan
+            const title = `<h3 class="text-xl font-bold text-center mb-4 col-span-full">Menampilkan rekomendasi untuk: <strong>${found_game_name}</strong></h3>`;
+            resultsContainer.innerHTML = title;
+
+            games.forEach(game => {
+                const card = `
+                    <div class="card bg-base-100 shadow-xl transition-transform transform hover:scale-105">
+                        <div class="card-body">
+                            <h2 class="card-title">${game.name}</h2>
+                            <p><strong>Developer:</strong> ${game.developer || 'N/A'}</p>
+                            <div class="card-actions justify-start mt-2">
+                                ${game.genres.split(';').map(genre => `<div class="badge badge-outline">${genre}</div>`).join('')}
+                            </div>
+                            <div class="card-actions justify-end mt-4">
+                                <div class="badge badge-secondary badge-lg">Harga: $${game.price}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                resultsContainer.innerHTML += card;
+            });
+        }
+        
+        function showError(message) {
+            errorText.textContent = message;
+            errorMessage.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
