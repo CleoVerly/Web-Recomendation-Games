@@ -1,89 +1,222 @@
 <!DOCTYPE html>
-<html lang="id" data-theme="dracula"> <head>
+<html lang="id" data-theme="dracula">
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rekomendasi Game Steam</title>
+    <title>Rekomendasi Game Steam Modern</title>
     <link href="https://cdn.jsdelivr.net/npm/daisyui@4.11.1/dist/full.min.css" rel="stylesheet" type="text/css" />
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for the application */
+        .initial-card { 
+            cursor: pointer; 
+        }
+        .genre-container::-webkit-scrollbar { 
+            width: 8px; 
+        }
+        .genre-container::-webkit-scrollbar-track { 
+            background: hsl(var(--b2)); /* Warna base-200 dari DaisyUI */
+        }
+        .genre-container::-webkit-scrollbar-thumb { 
+            background: hsl(var(--p)); /* Warna primary dari DaisyUI */
+            border-radius: 4px; 
+        }
+    </style>
 </head>
 <body class="min-h-screen bg-base-200">
 
-    <div class="container mx-auto p-4 md:p-8">
+    <div class="container mx-auto p-4 lg:p-8">
+        <!-- Header Section -->
+        <header class="text-center mb-8">
+            <h1 class="text-5xl font-bold">GameRecs 🎮</h1>
+            <p class="py-4 text-lg">Temukan petualangan baru dari game favoritmu.</p>
+        </header>
 
-        <div class="hero bg-base-100 rounded-box mb-8 shadow-xl">
-            <div class="hero-content text-center">
-                <div class="max-w-md">
-                    <h1 class="text-5xl font-bold">GameRecs 🎮</h1>
-                    <p class="py-6">Masukkan nama game favoritmu untuk menemukan petualangan baru yang mungkin kamu sukai. Ditenagai oleh data dari Steam.</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="form-control max-w-lg mx-auto mb-8">
-             <form id="recommendation-form" class="join">
-                <input id="game-input" type="text" placeholder="Contoh: gta atau terraria" class="input input-bordered w-full join-item" required/>
-                <button type="submit" class="btn btn-primary join-item">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" /></svg>
-                    Cari
-                </button>
-                
-                <button type="button" id="random-game-btn" class="btn btn-accent join-item">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 11.667 0l3.181-3.183m-4.991-2.691v4.992h-4.992v-4.992z" />
-                    </svg>
-                    Acak
-                </button>
-            </form>
-        </div>
-
-        <div id="results-container" class="mt-8">
-            <div id="loading" class="text-center hidden">
-                <span class="loading loading-lg loading-dots text-primary"></span>
-                <p>Mencari game yang cocok untukmu...</p>
-            </div>
+        <!-- Main layout grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
             
-            <div id="error-message" class="hidden">
-                 <div role="alert" class="alert alert-error">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    <span id="error-text"></span>
-                </div>
-            </div>
-            
-            <div id="recommendation-results" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            </div>
-        </div>
+            <!-- Left Column: Controls and Filters -->
+            <aside class="lg:col-span-4 xl:col-span-3">
+                <div class="card bg-base-100 shadow-xl sticky top-8">
+                    <div class="card-body">
+                        <h2 class="card-title mb-4">Cari & Filter</h2>
+                        <!-- Search Form -->
+                        <form id="recommendation-form" class="space-y-4">
+                            <div>
+                                <label for="game-input" class="label"><span class="label-text font-semibold">Nama Game Favorit</span></label>
+                                <input id="game-input" type="text" placeholder="Contoh: gta atau terraria" class="input input-bordered w-full"/>
+                            </div>
+                            <div class="join w-full">
+                                <button type="submit" class="btn btn-primary join-item flex-grow">Cari</button>
+                                <button type="button" id="random-game-btn" class="btn btn-accent join-item" title="Pilih game acak">🎲</button>
+                            </div>
+                        </form>
 
+                        <div class="divider my-4">ATAU</div>
+                        
+                        <!-- Genre Filter Section -->
+                        <div>
+                            <h3 class="font-bold mb-3">Filter Berdasarkan Genre</h3>
+                            <div id="genre-filter-container" class="genre-container max-h-60 overflow-y-auto pr-2 space-y-2 bg-base-200 p-4 rounded-md">
+                                <!-- Genre checkboxes will be loaded here by JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Right Column: Results -->
+            <main class="lg:col-span-8 xl:col-span-9">
+                <div id="results-parent-container">
+                    <!-- Loading Spinner -->
+                    <div id="loading" class="text-center hidden pt-16">
+                        <span class="loading loading-lg loading-dots text-primary"></span>
+                        <p>Mencari game yang cocok untukmu...</p>
+                    </div>
+                    
+                    <!-- Error Message Display -->
+                    <div id="error-message" class="hidden alert alert-error"><span id="error-text"></span></div>
+
+                    <!-- Initial Recommendations (shown on page load) -->
+                    <div id="initial-recommendations-container">
+                         <h2 class="text-3xl font-bold text-center lg:text-left mb-6">Pilih Game Untuk Memulai</h2>
+                         <div id="initial-games-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"></div>
+                    </div>
+                    
+                    <!-- Search Results Container -->
+                    <div id="recommendation-results" class="space-y-6 hidden">
+                        <h2 id="search-title" class="text-2xl font-bold"></h2>
+                        <div id="recommendation-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"></div>
+                    </div>
+                    
+                    <!-- Load More Button -->
+                    <div id="load-more-container" class="text-center mt-8 hidden">
+                        <button id="load-more-btn" class="btn btn-primary">Muat Lebih Banyak</button>
+                    </div>
+                </div>
+            </main>
+        </div>
     </div>
 
     <script>
+        // DOM Element References
         const form = document.getElementById('recommendation-form');
         const gameInput = document.getElementById('game-input');
+        const recommendationGrid = document.getElementById('recommendation-grid');
         const resultsContainer = document.getElementById('recommendation-results');
         const loadingSpinner = document.getElementById('loading');
         const errorMessage = document.getElementById('error-message');
         const errorText = document.getElementById('error-text');
         const randomBtn = document.getElementById('random-game-btn');
         const submitBtn = document.querySelector('#recommendation-form button[type="submit"]');
+        const genreFilterContainer = document.getElementById('genre-filter-container');
+        const initialRecsContainer = document.getElementById('initial-recommendations-container');
+        const initialGamesGrid = document.getElementById('initial-games-grid');
+        const loadMoreContainer = document.getElementById('load-more-container');
+        const loadMoreBtn = document.getElementById('load-more-btn');
+        const searchTitle = document.getElementById('search-title');
 
-        // Event listener untuk form pencarian utama
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault(); // Mencegah form reload halaman
+        // API Configuration
+        const API_BASE_URL = 'http://127.0.0.1:5000';
+
+        // State Management
+        let currentPage = 1;
+        let totalFound = 0;
+        let isLoading = false;
+
+        // --- Event Listeners ---
+        document.addEventListener('DOMContentLoaded', () => {
+            loadInitialGames();
+            loadGenres();
+        });
+
+        // Automatically trigger search when a genre checkbox is changed
+        genreFilterContainer.addEventListener('change', () => {
+            currentPage = 1; 
+            recommendationGrid.innerHTML = '';
+            fetchRecommendations();
+        });
+
+        // Trigger search on form submission
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            currentPage = 1;
+            recommendationGrid.innerHTML = '';
+            fetchRecommendations();
+        });
+
+        // Fetch a random game and trigger a search
+        randomBtn.addEventListener('click', async () => {
+            try {
+                loadingSpinner.classList.remove('hidden');
+                errorMessage.classList.add('hidden');
+                initialRecsContainer.classList.add('hidden');
+                const response = await fetch(`${API_BASE_URL}/random`);
+                const data = await response.json();
+                gameInput.value = data.game_name;
+                submitBtn.click();
+            } catch (error) {
+                showError('Gagal mengambil game acak. Coba lagi.');
+            } finally {
+                loadingSpinner.classList.add('hidden');
+            }
+        });
+
+        // Load more results
+        loadMoreBtn.addEventListener('click', () => {
+            currentPage++;
+            fetchRecommendations(true); // true indicates this is a "load more" action
+        });
+
+        // Trigger search when an initial recommendation card is clicked
+        initialGamesGrid.addEventListener('click', (e) => {
+            const card = e.target.closest('.initial-card');
+            if (card && card.dataset.gameName) {
+                const gameName = card.dataset.gameName;
+                gameInput.value = gameName;
+                submitBtn.click();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        });
+
+        // --- Core Functions ---
+
+        /**
+         * Fetches recommendations from the backend based on game name or selected genres.
+         * @param {boolean} isLoadMore - True if fetching the next page of results.
+         */
+        async function fetchRecommendations(isLoadMore = false) {
+            if (isLoading) return;
 
             const gameName = gameInput.value.trim();
-            if (!gameName) return;
+            const selectedGenres = Array.from(genreFilterContainer.querySelectorAll('input:checked')).map(cb => cb.value);
 
-            // Tampilkan loading, sembunyikan hasil lama dan error
+            // If no input and no genres are selected, show the initial recommendations and stop.
+            if (!gameName && selectedGenres.length === 0) {
+                resultsContainer.classList.add('hidden');
+                initialRecsContainer.classList.remove('hidden');
+                errorMessage.classList.add('hidden');
+                return;
+            }
+
+            if (!isLoadMore) {
+                initialRecsContainer.classList.add('hidden');
+            }
+            
+            isLoading = true;
             loadingSpinner.classList.remove('hidden');
-            resultsContainer.innerHTML = '';
             errorMessage.classList.add('hidden');
+            loadMoreContainer.classList.add('hidden');
 
             try {
-                const response = await fetch('http://127.0.0.1:5000/recommend', {
+                const response = await fetch(`${API_BASE_URL}/recommend`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ game_name: gameName }),
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        game_name: gameName,
+                        selected_genres: selectedGenres,
+                        page: currentPage
+                    }),
                 });
 
                 if (!response.ok) {
@@ -92,69 +225,125 @@
                 }
 
                 const data = await response.json();
-                displayRecommendations(data.recommendations, data.found_game);
+                totalFound = data.total_found;
+
+                if (!isLoadMore) {
+                    resultsContainer.classList.remove('hidden');
+                    displaySearchResultTitle(data.display_title);
+                }
+                
+                if (data.recommendations.length === 0 && !isLoadMore) {
+                    showError(`Tidak ada hasil ditemukan.`);
+                    resultsContainer.classList.add('hidden');
+                } else {
+                    appendGameCards(data.recommendations, recommendationGrid);
+                }
+
+                // Show or hide the "Load More" button
+                if ((currentPage * 20) < totalFound) {
+                    loadMoreContainer.classList.remove('hidden');
+                } else {
+                    loadMoreContainer.classList.add('hidden');
+                }
 
             } catch (error) {
                 showError(error.message);
+                resultsContainer.classList.add('hidden');
+                // If the search fails, show initial recommendations again if applicable
+                if (!gameName && selectedGenres.length === 0) {
+                    initialRecsContainer.classList.remove('hidden');
+                }
             } finally {
                 loadingSpinner.classList.add('hidden');
+                isLoading = false;
             }
-        });
+        }
         
-        // Event listener untuk tombol acak
-        randomBtn.addEventListener('click', async () => {
-            // Tampilkan loading, sembunyikan hasil lama dan error
-            loadingSpinner.classList.remove('hidden');
-            resultsContainer.innerHTML = '';
-            errorMessage.classList.add('hidden');
-            gameInput.value = ''; // Kosongkan input field
-
-            try {
-                const response = await fetch('http://127.0.0.1:5000/random');
-                const data = await response.json();
-                
-                // Masukkan nama game acak ke dalam input field
-                gameInput.value = data.game_name;
-                
-                // Secara otomatis klik tombol "Cari" untuk langsung menampilkan rekomendasi
-                submitBtn.click();
-                
-            } catch (error) {
-                showError('Gagal mengambil game acak. Coba lagi.');
-                loadingSpinner.classList.add('hidden');
-            }
-        });
-
-        function displayRecommendations(games, found_game_name) {
-            resultsContainer.innerHTML = ''; // Kosongkan hasil sebelumnya
-            if (!games || games.length === 0) {
-                 showError('Tidak ada rekomendasi yang ditemukan.');
-                 return;
-            }
-
-            // Tambahkan judul untuk menunjukkan game apa yang ditemukan
-            const title = `<h3 class="text-xl font-bold text-center mb-4 col-span-full">Menampilkan rekomendasi untuk: <strong>${found_game_name}</strong></h3>`;
-            resultsContainer.innerHTML = title;
-
+        /**
+         * Creates and appends game cards to a container.
+         * @param {Array} games - An array of game objects.
+         * @param {HTMLElement} container - The container to append the cards to.
+         * @param {boolean} isInitial - True if these are the initial clickable cards.
+         */
+        function appendGameCards(games, container, isInitial = false) {
             games.forEach(game => {
-                const card = `
-                    <div class="card bg-base-100 shadow-xl transition-transform transform hover:scale-105">
-                        <div class="card-body">
-                            <h2 class="card-title">${game.name}</h2>
-                            <p><strong>Developer:</strong> ${game.developer || 'N/A'}</p>
-                            <div class="card-actions justify-start mt-2">
-                                ${game.genres.split(';').map(genre => `<div class="badge badge-outline">${genre}</div>`).join('')}
-                            </div>
-                            <div class="card-actions justify-end mt-4">
-                                <div class="badge badge-secondary badge-lg">Harga: $${game.price}</div>
-                            </div>
+                const cardClass = isInitial ? 'initial-card' : '';
+                const card = document.createElement('div');
+                card.className = `card bg-base-100 shadow-xl transition-transform transform hover:scale-105 ${cardClass}`;
+                if (isInitial) { card.dataset.gameName = game.name; }
+                
+                // Assuming a rough exchange rate of 1 USD = 16,000 IDR
+                const priceInIDR = new Intl.NumberFormat('id-ID').format(Math.round(game.price * 16000));
+
+                card.innerHTML = `
+                    <div class="card-body p-5">
+                        <h2 class="card-title text-lg">${game.name}</h2>
+                        <p class="text-sm text-base-content/70">${game.developer || 'N/A'}</p>
+                        <div class="card-actions justify-start mt-3 flex-wrap gap-1">
+                            ${game.genres.split(';').map(genre => `<div class="badge badge-outline badge-sm">${genre}</div>`).join('')}
+                        </div>
+                        <div class="card-actions justify-end mt-4">
+                             <div class="badge badge-secondary">Rp ${priceInIDR}</div>
                         </div>
                     </div>
                 `;
-                resultsContainer.innerHTML += card;
+                container.appendChild(card);
             });
         }
         
+        /**
+         * Displays the title for the search results.
+         * @param {string} titleHtml - The HTML string for the title.
+         */
+        function displaySearchResultTitle(titleHtml) {
+            if (titleHtml) {
+                searchTitle.innerHTML = titleHtml;
+                searchTitle.classList.remove('hidden');
+            } else {
+                searchTitle.classList.add('hidden');
+            }
+        }
+
+        /**
+         * Loads the initial set of games to display on the page.
+         */
+        async function loadInitialGames() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/initial-recommendations`);
+                const games = await response.json();
+                appendGameCards(games, initialGamesGrid, true);
+            } catch (error) {
+                console.error("Gagal memuat rekomendasi awal:", error);
+                initialGamesGrid.innerHTML = `<p class="text-error col-span-full">Gagal memuat rekomendasi awal. Pastikan server backend berjalan.</p>`;
+            }
+        }
+
+        /**
+         * Loads the list of genres and populates the filter checkboxes.
+         */
+        async function loadGenres() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/genres`);
+                const genres = await response.json();
+                genreFilterContainer.innerHTML = ''; // Clear previous entries
+                genres.forEach(genre => {
+                    genreFilterContainer.innerHTML += `
+                        <label class="label cursor-pointer gap-2 p-0">
+                            <span class="label-text">${genre}</span> 
+                            <input type="checkbox" value="${genre}" class="checkbox checkbox-primary checkbox-sm" />
+                        </label>
+                    `;
+                });
+            } catch (error) {
+                console.error("Gagal memuat genre:", error);
+                genreFilterContainer.innerHTML = `<p class="text-error">Gagal memuat genre.</p>`;
+            }
+        }
+
+        /**
+         * Displays an error message to the user.
+         * @param {string} message - The error message to display.
+         */
         function showError(message) {
             errorText.textContent = message;
             errorMessage.classList.remove('hidden');
